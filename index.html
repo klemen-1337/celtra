@@ -88,19 +88,21 @@
     <script>
         class CircularSlider {
             constructor(options) {
-                const { container, radius, color, minValue = 0, maxValue = 100, step = 1 } = options;
+                const { container, radius, color, minValue = 0, maxValue = 100, step = 1, index } = options;
                 
                 this.options = { container, radius, color, minValue, maxValue, step };
                 this.currentValue = minValue;
-                this.init();
+                this.isDragging = false;
+                this.init(index);
             }
     
-            init() {
+            init(index) {
                 const { container, radius, color } = this.options;
                 
                 // Create slider element
                 const sliderElement = document.createElement('div');
                 sliderElement.className = 'circular-slider';
+                sliderElement.style.zIndex = 100 - index;
                 
                 // Create SVG
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -138,8 +140,57 @@
                 sliderElement.append(svg);
                 container.appendChild(sliderElement);
                                
-                this.elements = { progress, handle };
+                this.elements = { sliderElement, progress, handle };
+                this.bindEvents();
                 this.setValue(this.currentValue);
+            }
+
+            bindEvents() {
+                const handleStart = (e) => {
+                    this.isDragging = true;
+                    this.updateFromEvent(e);
+                };
+                
+                const handleMove = (e) => {
+                    if (this.isDragging) {
+                        e.preventDefault();
+                        this.updateFromEvent(e);
+                    }
+                };
+                
+                const handleEnd = () => {
+                    this.isDragging = false;
+                };
+                
+                this.elements.sliderElement.addEventListener('mousedown', handleStart);
+                document.addEventListener('mousemove', handleMove);
+                document.addEventListener('mouseup', handleEnd);
+                
+                this.elements.sliderElement.addEventListener('touchstart', handleStart, { passive: false });
+                document.addEventListener('touchmove', handleMove, { passive: false });
+                document.addEventListener('touchend', handleEnd);
+                
+                this.elements.sliderElement.addEventListener('click', (e) => {
+                    if (!this.isDragging) this.updateFromEvent(e);
+                });
+            }
+
+            updateFromEvent(e) {
+                const { sliderElement } = this.elements;
+                const { radius, minValue, maxValue } = this.options;
+                
+                const rect = sliderElement.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const clientX = e.touches?.[0]?.clientX || e.clientX;
+                const clientY = e.touches?.[0]?.clientY || e.clientY;
+                
+                const angle = Math.atan2(clientY - centerY, clientX - centerX);
+                let degree = (angle * 180 / Math.PI + 90 + 360) % 360;
+                
+                const value = minValue + (degree / 360) * (maxValue - minValue);
+                this.setValue(value);
             }
 
             setValue(value) {
@@ -176,7 +227,8 @@
                 color: colors[index],
                 maxValue,
                 minValue: 0,
-                step: 1
+                step: 1,
+                index: index
             });
         });
 

@@ -3,7 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circle sliders</title>
+    <title>Concentric Circular Sliders</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .layout-container {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .slider-container {
+            position: relative;
+            padding: 40px 20px 60px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .slider-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 500px;
+            height: 500px;
+        }
+    </style>
 </head>
 <body>
     <div class="layout-container">
@@ -12,5 +50,63 @@
             <div class="slider-wrapper" id="slider-wrapper"></div>
         </div>
     </div>
+
+    <script>
+        class CircularSlider {
+            constructor(options) {
+                const { container, radius, color, minValue = 0, maxValue = 100, step = 1 } = options;
+                
+                this.options = { container, radius, color, minValue, maxValue, step };
+                
+                this.init();
+            }
+    
+            init() {
+                const { container, radius, color } = this.options;
+                
+                // Create slider element
+                const sliderElement = document.createElement('div');
+                sliderElement.className = 'circular-slider';
+                
+                // Create SVG
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', radius * 2);
+                svg.setAttribute('height', radius * 2);
+                svg.setAttribute('viewBox', `0 0 ${radius * 2} ${radius * 2}`);
+
+                // Circle
+                const track = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                track.setAttribute('cx', radius);
+                track.setAttribute('cy', radius);
+                track.setAttribute('r', radius - 10);
+                track.setAttribute('stroke', color);
+                track.classList.add('circle');
+                
+                svg.appendChild(track);
+                sliderElement.append(svg);
+                container.appendChild(sliderElement);
+                
+                this.elements = { sliderElement };
+            }
+        }
+
+        // Initialize sliders
+        const wrapper = document.getElementById('slider-wrapper');
+        const colors = ['#007AFF', '#FF9500', '#FF2D55', '#4CD964'];
+        const baseRadius = 40;
+        const radiusIncrement = 20;
+
+        [100, 200, 300, 400].forEach((maxValue, index) => {
+            new CircularSlider({
+                container: wrapper,
+                radius: baseRadius + (index * radiusIncrement),
+                color: colors[index],
+                maxValue,
+                minValue: 0,
+                step: 1
+            });
+        });
+
+    </script>
 </body>
 </html>

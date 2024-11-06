@@ -41,6 +41,40 @@
             width: 500px;
             height: 500px;
         }
+
+        .circular-slider {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .value-container {
+            width: 200px;
+            padding: 20px;
+        }
+
+        .slider-svg {
+            overflow: visible;
+        }
+
+        .background-track {
+            fill: none;
+            stroke: #f0f0f0;
+            stroke-width: 20;
+            stroke-dasharray: 4 2;
+        }
+
+        .progress-track {
+            fill: none;
+            opacity: 0.6;
+            stroke-width: 20;         
+        }
+
+        .handle {
+            cursor: grab;
+            filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+        }   
     </style>
 </head>
 <body>
@@ -57,7 +91,7 @@
                 const { container, radius, color, minValue = 0, maxValue = 100, step = 1 } = options;
                 
                 this.options = { container, radius, color, minValue, maxValue, step };
-                
+                this.currentValue = minValue;
                 this.init();
             }
     
@@ -73,28 +107,67 @@
                 svg.setAttribute('width', radius * 2);
                 svg.setAttribute('height', radius * 2);
                 svg.setAttribute('viewBox', `0 0 ${radius * 2} ${radius * 2}`);
-
-                // Circle
+                svg.classList.add('slider-svg');
+                
+                // Background track with dashed pattern
                 const track = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 track.setAttribute('cx', radius);
                 track.setAttribute('cy', radius);
                 track.setAttribute('r', radius - 10);
-                track.setAttribute('stroke', color);
-                track.classList.add('circle');
+                track.classList.add('background-track');
                 
-                svg.appendChild(track);
+                // Progress track
+                const progress = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                progress.setAttribute('cx', radius);
+                progress.setAttribute('cy', radius);
+                progress.setAttribute('r', radius - 10);
+                progress.setAttribute('stroke', color);
+                progress.classList.add('progress-track');
+                
+                const circumference = 2 * Math.PI * (radius - 10);
+                progress.setAttribute('stroke-dasharray', `${circumference} ${circumference}`);
+                
+                // Handle
+                const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                handle.setAttribute('r', 14);
+                handle.setAttribute('fill', 'white');
+                handle.setAttribute('stroke-width', '3');
+                handle.classList.add('handle');
+                
+                svg.append(track, progress, handle);
                 sliderElement.append(svg);
                 container.appendChild(sliderElement);
+                               
+                this.elements = { progress, handle };
+                this.setValue(this.currentValue);
+            }
+
+            setValue(value) {
+                const { progress, handle } = this.elements;
+                const { radius, minValue, maxValue, step } = this.options;
                 
-                this.elements = { sliderElement };
+                value = Math.max(minValue, Math.min(maxValue, value));
+                value = Math.round(value / step) * step;
+                this.currentValue = value;
+
+                const progressPercent = (value - minValue) / (maxValue - minValue);
+                const circumference = 2 * Math.PI * (radius - 10);
+                const offset = circumference * (1 - progressPercent);
+                progress.style.strokeDashoffset = offset;
+                
+                const angle = (progressPercent * 360 - 90) * (Math.PI / 180);
+                const x = radius + (radius - 10) * Math.cos(angle);
+                const y = radius + (radius - 10) * Math.sin(angle);
+                handle.setAttribute('cx', x);
+                handle.setAttribute('cy', y);
             }
         }
 
         // Initialize sliders
         const wrapper = document.getElementById('slider-wrapper');
         const colors = ['#007AFF', '#FF9500', '#FF2D55', '#4CD964'];
-        const baseRadius = 40;
-        const radiusIncrement = 20;
+        const baseRadius = 80;
+        const radiusIncrement = 40;
 
         [100, 200, 300, 400].forEach((maxValue, index) => {
             new CircularSlider({

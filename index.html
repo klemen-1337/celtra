@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Concentric Circular Sliders</title>
     <style>
-        /* Basic styling for the page */
         body {
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -22,6 +20,7 @@
             border-radius: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 100%;
+            max-width: 800px;
         }
 
         .slider-container {
@@ -31,6 +30,7 @@
             justify-content: center;
             align-items: flex-start;
             flex-wrap: wrap;
+            gap: 20px;
         }
 
         .slider-wrapper {
@@ -54,6 +54,22 @@
             padding: 20px;
         }
 
+        .value-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .color-square {
+            width: 15px;
+            height: 15px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
         .slider-svg {
             overflow: visible;
         }
@@ -74,7 +90,23 @@
         .handle {
             cursor: grab;
             filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
-        }   
+        }
+
+        .handle:active {
+            cursor: grabbing;
+        }
+
+        .slider-label {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 14px;
+            color: #000;
+            font-weight: 600;
+            width: 100%;
+        }      
     </style>
 </head>
 <body>
@@ -88,21 +120,35 @@
     <script>
         class CircularSlider {
             constructor(options) {
-                const { container, radius, color, minValue = 0, maxValue = 100, step = 1, index } = options;
+                const { container, radius, color, minValue = 0, maxValue = 100, step = 1, category, index } = options;
                 
-                this.options = { container, radius, color, minValue, maxValue, step };
+                this.options = { container, radius, color, minValue, maxValue, step, category };
                 this.currentValue = minValue;
-                this.isDragging = false;
+                this.isDragging = false;              
                 this.init(index);
             }
-    
+            
             init(index) {
-                const { container, radius, color } = this.options;
+                const { container, radius, color, category } = this.options;
                 
                 // Create slider element
                 const sliderElement = document.createElement('div');
                 sliderElement.className = 'circular-slider';
                 sliderElement.style.zIndex = 100 - index;
+                
+                // Create value display with color square
+                const valueContainer = document.getElementById('value-container');
+                const valueDisplay = document.createElement('div');
+                valueDisplay.className = 'value-display';
+                
+                const colorSquare = document.createElement('span');
+                colorSquare.className = 'color-square';
+                colorSquare.style.backgroundColor = color;
+                
+                const valueText = document.createElement('span');
+                valueDisplay.appendChild(colorSquare);
+                valueDisplay.appendChild(valueText);
+                valueContainer.appendChild(valueDisplay);
                 
                 // Create SVG
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -139,12 +185,12 @@
                 svg.append(track, progress, handle);
                 sliderElement.append(svg);
                 container.appendChild(sliderElement);
-                               
-                this.elements = { sliderElement, progress, handle };
+                
+                this.elements = { sliderElement, valueText, progress, handle };
                 this.bindEvents();
                 this.setValue(this.currentValue);
             }
-
+            
             bindEvents() {
                 const handleStart = (e) => {
                     this.isDragging = true;
@@ -174,7 +220,7 @@
                     if (!this.isDragging) this.updateFromEvent(e);
                 });
             }
-
+            
             updateFromEvent(e) {
                 const { sliderElement } = this.elements;
                 const { radius, minValue, maxValue } = this.options;
@@ -192,15 +238,17 @@
                 const value = minValue + (degree / 360) * (maxValue - minValue);
                 this.setValue(value);
             }
-
+            
             setValue(value) {
-                const { progress, handle } = this.elements;
-                const { radius, minValue, maxValue, step } = this.options;
+                const { valueText, progress, handle } = this.elements;
+                const { radius, minValue, maxValue, step, category } = this.options;
                 
                 value = Math.max(minValue, Math.min(maxValue, value));
                 value = Math.round(value / step) * step;
                 this.currentValue = value;
-
+                
+                valueText.textContent = `$${Math.round(value)} ${category}`;
+                
                 const progressPercent = (value - minValue) / (maxValue - minValue);
                 const circumference = 2 * Math.PI * (radius - 10);
                 const offset = circumference * (1 - progressPercent);
@@ -218,6 +266,7 @@
         // Initialize sliders
         const wrapper = document.getElementById('slider-wrapper');
         const colors = ['#007AFF', '#FF9500', '#FF2D55', '#4CD964'];
+        const categories = ['Food', 'Transport', 'Entertainment', 'Health'];
         const baseRadius = 80;
         const radiusIncrement = 40;
 
@@ -229,10 +278,15 @@
                 maxValue,
                 minValue: 0,
                 step: 1,
-                index: index
+                category: categories[index],
+                index
             });
         });
 
+        const label = document.createElement('div');
+        label.className = 'slider-label';
+        label.textContent = 'ADJUST DIAL TO ENTER EXPENSES';
+        wrapper.appendChild(label);
     </script>
 </body>
 </html>

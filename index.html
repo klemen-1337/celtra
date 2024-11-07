@@ -21,10 +21,10 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 800px;
+            background: linear-gradient(#efefef 0%, #cbccce 100%);
         }
 
         .slider-container {
-            position: relative;
             padding: 40px 20px 60px 20px;
             display: flex;
             justify-content: center;
@@ -51,6 +51,8 @@
 
         .value-container {
             width: 200px;
+            display: flex;
+            flex-direction: column;
             padding: 20px;
         }
 
@@ -83,7 +85,7 @@
 
         .progress-track {
             fill: none;
-            opacity: 0.6;
+            opacity: 0.75;
             stroke-width: 20;         
         }
 
@@ -107,6 +109,12 @@
             font-weight: 600;
             width: 100%;
         }      
+        .value-text{
+            font-size: 40px;
+            font-weight: 600;
+            width: 80px;
+        }
+
     </style>
 </head>
 <body>
@@ -146,8 +154,15 @@
                 colorSquare.style.backgroundColor = color;
                 
                 const valueText = document.createElement('span');
-                valueDisplay.appendChild(colorSquare);
+                valueText.className = 'value-text';
+
+                const categoryText = document.createElement('span');
+                categoryText.textContent = category;
+                
                 valueDisplay.appendChild(valueText);
+                valueDisplay.appendChild(colorSquare);
+                valueDisplay.appendChild(categoryText);
+                
                 valueContainer.appendChild(valueDisplay);
                 
                 // Create SVG
@@ -247,7 +262,7 @@
                 value = Math.round(value / step) * step;
                 this.currentValue = value;
                 
-                valueText.textContent = `$${Math.round(value)} ${category}`;
+                valueText.textContent = `$${Math.round(value)}`;
                 
                 const progressPercent = (value - minValue) / (maxValue - minValue);
                 const circumference = 2 * Math.PI * (radius - 10);
@@ -265,8 +280,8 @@
 
         // Initialize sliders
         const wrapper = document.getElementById('slider-wrapper');
-        const colors = ['#007AFF', '#FF9500', '#FF2D55', '#4CD964'];
-        const categories = ['Food', 'Transport', 'Entertainment', 'Health'];
+        const colors = ['#d87f26', '#489317', '#0873b1', '#553d6d'];
+        const categories = ['Food', 'Transport', 'Insurance', 'Health'];
         const baseRadius = 80;
         const radiusIncrement = 40;
 
